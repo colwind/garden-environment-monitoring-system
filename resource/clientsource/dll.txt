@@ -1,0 +1,66 @@
+  /*
+         加载动态链接库函数
+         */
+        #region
+        [DllImport("Netfree.dll")]
+        public static extern short StartServiceTCP(int uPort);//启动TCP服务:服务启动正常返回 1
+        [DllImport("Netfree.dll")]
+        public static extern void StopService();//停止服务     
+        [DllImport("Netfree.dll")]
+        public static extern void EnableAutoRequest(bool bMode); //允许自动查询寄存器
+        [DllImport("Netfree.dll")]
+        public static extern int IsOnline(int bClass, int uBlock, int uAddr);//检查设备是否在线:设备在线返回 TRUE，不在线返回 FALSE
+        #region 配置指令
+        [DllImport("Netfree.dll")]
+        public static extern void SetAutoRequestPeriod(int uSecond); //设置自动查询寄存器周期：默认2分钟：120s
+        [DllImport("Netfree.dll")]
+        public static extern void SetInterval(int uMilliSecond);//设置动态库处理队列指令周期，默认1000ms :1秒
+        [DllImport("Netfree.dll")]
+        public static extern void SetResend(int uTime);//设置下发指令无反应，动态库的重发次数，默认5次 
+        #endregion
+        #region 下发指令
+        [DllImport("Netfree.dll")]
+        public static extern bool ReadHoldingRegisters(int bClass, int uBlock, int uAddr, int uStartAddr, int uRegNum);  //下发：向设备下发读保持寄存器操作命令:正确执行并下发返回 TRUE，产生错误返回 FALSE，通过调用 GetReturn 或 GetReturnHex 函数获取未解析的设备应答    
+        [DllImport("Netfree.dll")]
+        public static extern bool ReadInputRegisters(int bClass, int uBlock, int uAddr, int uStartAddr, int uRegNum);//下发：向设备下发读模拟量通道数据命令,  //通过调用 GetReturn 或 GetReturnHex 函数获取未解析的设备应答  
+        [DllImport("Netfree.dll")]
+        public static extern bool ReadChannels(int bClass, int uBlock, int uAddr); //下发：向设备下发读全通道值指令，命令成功下发后， 当判断到终端返回数据时， 可通过提供的 GetChnlDigital、 GetChnlCoil、GetChnlDataI 等函数获得各通道值数字量及模拟量值   
+        [DllImport("Netfree.dll")]
+        public static extern bool ReadCoils(int bClass, int uBlock, int uAddr, int uStartAddr, int uRegNum);//下发：读继电器数据命令 ,通过调用 GetCoil 函数获取结果
+        [DllImport("Netfree.dll")]
+        public static extern bool ReadDigitals(int bClass, int uBlock, int uAddr, int uStartAddr, int uRegNum);//下发：读数字量通道数据命令,通过调用 GetDigital 函数获取解析结果 
+        #endregion
+        [DllImport("Netfree.dll")]
+        public static extern bool HasError(int bClass, int uBlock, int uAddr, int uSubAddr);//调用相关函数获得返回数据前，通过该方法判断是否有错误产生
+        [DllImport("Netfree.dll")]
+        public static extern String GetError(int bClass, int uBlock, int uAddr, int uSubAddr);//当判断 HasError 函数返回 TURE 后，通过调用该函数得到错误说明
+        //下发命令后，调用该方法获得其运行状态,命令处理完毕返回 TRUE， 包括有效数据返回和执行时产生错误情况； 命令未执行完返回FALSE
+        [DllImport("Netfree.dll")]
+        public static extern bool HasReturn(int bClass, int uBlock, int uAddr, int uSubAddr);
+        #region 获取指令
+        [DllImport("Netfree.dll")]
+        public static extern int GetData(int bClass, int uBlock, int uAddr, int iRegNum, ref int[] iData);//获得模拟量通道数据解析的整形值, 传入的整形数组指针，用于传出通道模拟量数据
+        [DllImport("Netfree.dll")]
+        public static extern int GetCoil(int bClass, int uBlock, int uAddr, int iRegNum, ref bool[] bData);//获取指定终端继电器通道的解析值， 即解析 Modbus 中 01 功能码的命令返回
+        [DllImport("Netfree.dll")]
+        public static extern int GetDigital(int bClass, int uBlock, int uAddr, int iRegNum, ref bool[] bData);//获取指定终端数字量通道解析值，即解析 Modbus 中 02 功能码的命令返回
+        [DllImport("Netfree.dll")]
+        public static extern String GetReturn(int bClass, int uBlock, int uAddr, int uSubAddr);//获得指定终端设备执行用户下发命令后的返回结果（用户发送请求命令的运行结果， ASCII 码形式字符串）
+        [DllImport("Netfree.dll")]
+        public static extern String GetReturnHex(int bClass, int uBlock, int uAddr, int uSubAddr);//获取用户下发指令后的返回结果 
+        [DllImport("Netfree.dll")]
+        public static extern String GetChannels(int bClass, int uBlock, int uAddr);//获取全通道未解析的原始数据串
+        [DllImport("Netfree.dll")]
+        public static extern int GetChnlDigital(int bClass, int uBlock, int uAddr, int iChnlNum, ref bool[] bData);//获取指定终端全通道数据中解析获得的数字量值
+        [DllImport("Netfree.dll")]
+        public static extern int GetChnlCoil(int bClass, int uBlock, int uAddr, int iChnlNum, ref bool[] bData);//获取指定终端全通道数据中解析获得的继电器值
+        [DllImport("Netfree.dll")]
+        public static extern int GetChnlDataW(int bClass, int uBlock, int uAddr, int iChnlNum, ref long[] wData);//获得指定终端全通道数据中解析获得的完整通道模拟量数值
+        #endregion
+        #region 获取自动上报取数据
+        [DllImport("Netfree.dll")]
+        public static extern String GetAutoUpdateData(int bClass, int uBlock, int uAddr, int uSubAddr);//获取主动上报数据
+        [DllImport("Netfree.dll")]
+        public static extern String GetAutoUpdateDataHex(int bClass, int uBlock, int uAddr, int uSubAddr);//获取主动上报数据 
+        #endregion
+        #endregion

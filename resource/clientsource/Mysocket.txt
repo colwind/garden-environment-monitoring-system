@@ -1,0 +1,95 @@
+  //定义数据长度(c.h宏)
+        #region 定义数据长度
+        public const int MAX_LENGTH_OF_NODE = 17;
+        public const int MAX_LENGTH_OF_DEVICE = 3;
+        public const int MAX_LENGTH_OF_TRANSTYPE = 3;
+        public const int MAX_LENGTH_OF_STARTADDR = 5;
+        public const int MAX_LENGTH_OF_BYTECOUNT = 3;
+        public const int MAX_LENGTH_OF_TEMPERATURE = 9;
+        public const int MAX_LENGTH_OF_HUMIDITY = 9;
+        public const int MAX_LENGTH_OF_ILLUMINANCE = 9;
+        public const int MAX_LENGTH_OF_SOLITEMPERATURE = 9;
+        public const int MAX_LENGTH_OF_SOLIWATER = 9;
+        public const int MAX_LENGTH_OF_VOLTAGE = 9;
+        public const int MAX_LENGTH_OF_CHECKBIT1 = 5;
+        public const int MAX_LENGTH_OF_CHECKBIT2 = 5;
+        #endregion
+
+        //通信数据结构体类型(C#托管代码 向C\C++非托管代码封送数据的过程中做数据转换)
+        public struct SensorData
+        {
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MySocket.MAX_LENGTH_OF_NODE)]
+            public char[] node;//节点地址
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MySocket.MAX_LENGTH_OF_DEVICE)]
+            public char[] device;	//设备地址   
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MySocket.MAX_LENGTH_OF_TRANSTYPE)]
+            public char[] transtype;//传输方式 0x60:主动上报
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MySocket.MAX_LENGTH_OF_STARTADDR)]
+            public char[] startaddr;//起始地址   
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MySocket.MAX_LENGTH_OF_BYTECOUNT)]
+            public char[] bytecount;//字节记数(6个数据组 * 每组2个数据 * 1个数据2个字节 =24)  
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MySocket.MAX_LENGTH_OF_TEMPERATURE)]
+            public char[] temperature;//温度    
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MySocket.MAX_LENGTH_OF_HUMIDITY)]
+            public char[] humidity;//湿度   
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MySocket.MAX_LENGTH_OF_ILLUMINANCE)]
+            public char[] illuminance;//照度  
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MySocket.MAX_LENGTH_OF_SOLITEMPERATURE)]
+            public char[] solitemperature;//土壤温度    
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MySocket.MAX_LENGTH_OF_SOLIWATER)]
+            public char[] soliwater;//土壤水份   
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MySocket.MAX_LENGTH_OF_VOLTAGE)]
+            public char[] voltage;//设备电量    
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MySocket.MAX_LENGTH_OF_CHECKBIT1)]
+            public char[] checkbit1;//检验1 
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MySocket.MAX_LENGTH_OF_CHECKBIT2)]
+            public char[] checkbit2;//检验2           
+        }
+        /// <summary>  
+        /// 由结构体转换为byte数组  
+        /// </summary>  
+        public static byte[] StructureToByte<T>(T structure)
+        {
+            //得到结构体的大小
+            int size = Marshal.SizeOf(typeof(T));
+            //分配结构体大小的内存空间
+            byte[] buffer = new byte[size];
+            IntPtr bufferIntPtr = Marshal.AllocHGlobal(size);
+            try
+            {
+                //将结构体拷到分配好的内存空间
+                //将数据从托管对象封送到非托管内存块，属于.NET Framework 类库
+                //ptr:指向非托管内存块的指针，必须在调用此方法之前分配该指针。
+                //fDeleteOld：设置为 true 可在执行Marshal.DestroyStructure方法前对 ptr 参数调用此方法。请注意，传递 false 可导致内存泄漏。
+                Marshal.StructureToPtr(structure, bufferIntPtr, true);
+                //将数据从非托管内存块封送到新分配的指定类型的托管对象anotherPerson
+                //T anotherT = (T)Marshal.PtrToStructure(bufferIntPtr, typeof(T));
+                //从内存空间拷到byte数组
+                Marshal.Copy(bufferIntPtr, buffer, 0, size);
+            }
+            finally
+            {
+                //释放内存空间
+                Marshal.FreeHGlobal(bufferIntPtr);
+            }
+            return buffer;
+        }
+        /// <summary>  
+        /// 由byte数组转换为结构体  
+        /// </summary>  
+        public static T ByteToStructure<T>(byte[] dataBuffer)
+        {
+            object structure = null;
+            int size = Marshal.SizeOf(typeof(T));
+            IntPtr allocIntPtr = Marshal.AllocHGlobal(size);
+            try
+            {
+                Marshal.Copy(dataBuffer, 0, allocIntPtr, size);
+                structure = Marshal.PtrToStructure(allocIntPtr, typeof(T));
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(allocIntPtr);
+            }
+            return (T)structure;
+        }

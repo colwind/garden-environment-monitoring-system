@@ -1,0 +1,246 @@
+      //解析数据方法
+        private void AnalyticDataMethod(string receiveString)
+        {
+            ListViewItem istItem = null;
+            string oldstr = receiveString;
+            try
+            {
+                if (!string.IsNullOrEmpty(receiveString))
+                {
+                    //解析数据//	 节点地址	                设备地址   传输方式	 起始地址   字节记数  温度           湿度            照度          土壤温度       土壤水份      设备电量        检验1 检验2       
+                    //receiveStrHex	 01 1F 01 07 1A D3 00 90     A1        60        00 00      18        01 81 00 E5    02 01 02 B8     03 00 00 A1   04 81 00 E0    05 03 00 08   F2 02 01 48     AF 6B 6E 34
+                    istItem = new ListViewItem(DateTime.Now.ToString());//日期
+                    istItem.SubItems.Add(receiveString.Substring(0, 16));//节点地址（网关地址）
+                    istItem.SubItems.Add(receiveString.Substring(16, 2));//设备地址（传感器地址）
+                    if (receiveString.Substring(18, 2) == "60")//网关上传数据的方式(60：主动上传，查询应答上传)
+                    {
+                        istItem.SubItems.Add("主动上报");
+                    }
+                    else
+                    {
+                        istItem.SubItems.Add("查询上报");
+                    }
+                    //无符号数：0 ----------------- 255
+                    //有符号数：-128 --------- 0 ---------- 127　
+                    //温度
+                    //数据格式 81:10000001
+                    if (receiveString.Substring(26, 2) == "01")
+                    {
+                        //第一组数据:位格式解析
+                        double temperature = 0;
+                        int pointbit = BitFormat(receiveString.Substring(28, 2));//返回小数位数
+                        if (flagBit7 && (!flagBit6) && (!flagBit5) && (!flagBit4))
+                        {
+                            //flagBit7为true表示是有符号数：温度可能为负数
+                            //flagBit6为false表示数值量
+                            //flagBit5为false表示用双字节来表示温度
+                            //flagBit4为false表示温度取数方式，是取低2字节
+                            temperature = Convert.ToInt32(receiveString.Substring(30, 4), 16);//取低2位
+                            if (pointbit == 0)
+                            { ;}
+                            else
+                            {
+                                //0~7表示小数位数 0：无小数
+                                temperature = temperature / (Math.Pow(10, pointbit));
+                            }
+                        }
+                        istItem.SubItems.Add(temperature.ToString() + " °C");
+                    }
+                    //湿度 
+                    //数据格式 01:00000001
+                    if (receiveString.Substring(34, 2) == "02")
+                    {
+                        //第二组数据:位格式解析
+                        double humidity = 0;
+                        int pointbit = BitFormat(receiveString.Substring(36, 2));//返回小数位数
+                        if ((!flagBit7) && (!flagBit6) && (!flagBit5) && (!flagBit4))
+                        {
+                            //flagBit7为false表示是无符号数：湿度为非负数
+                            //flagBit6为false表示数值量
+                            //flagBit5为false表示用双字节来表示湿度
+                            //flagBit4为false表示湿度取数方式，是取低2字节
+                            humidity = Convert.ToInt32(receiveString.Substring(38, 4), 16);//取低2位
+                            if (pointbit == 0)
+                            { ;}
+                            else
+                            {
+                                //0~7表示小数位数 0：无小数
+                                humidity = humidity / (Math.Pow(10, pointbit));
+                            }
+                        }
+                        istItem.SubItems.Add(humidity.ToString() + " %RH");
+                    }
+                    //照度 
+                    //数据格式 00:00000000
+                    if (receiveString.Substring(42, 2) == "03")
+                    {
+                        //第三组数据:位格式解析
+                        double illuminance = 0;
+                        int pointbit = BitFormat(receiveString.Substring(44, 2));//返回小数位数
+                        if ((!flagBit7) && (!flagBit6) && (!flagBit5) && (!flagBit4))
+                        {
+                            //flagBit7为false表示是无符号数:照度为非负数
+                            //flagBit6为false表示数值量
+                            //flagBit5为false表示用双字节来表示照度
+                            //flagBit4为false表示照度取数方式，是取低2字节
+                            illuminance = Convert.ToInt32(receiveString.Substring(46, 4), 16);//取低2位
+                            if (pointbit == 0)
+                            { ;}
+                            else
+                            {
+                                //0~7表示小数位数 0：无小数
+                                illuminance = illuminance / (Math.Pow(10, pointbit));
+                            }
+                        }
+                        istItem.SubItems.Add(illuminance.ToString() + " lux");
+                    }
+                    //土壤温度
+                    //数据格式 81:10000001
+                    if (receiveString.Substring(50, 2) == "04")
+                    {
+                        //第四组数据:位格式解析
+                        double soliTemperature = 0;
+                        int pointbit = BitFormat(receiveString.Substring(52, 2));//返回小数位数
+                        if (flagBit7 && (!flagBit6) && (!flagBit5) && (!flagBit4))
+                        {
+                            //flagBit7为true表示是有符号数：土壤温度可能为负数
+                            //flagBit6为false表示数值量
+                            //flagBit5为false表示用双字节来表示土壤温度
+                            //flagBit4为false表示土壤温度取数方式，是取低2字节
+                            soliTemperature = Convert.ToInt32(receiveString.Substring(54, 4), 16);//取低2位
+                            if (pointbit == 0)
+                            { ;}
+                            else
+                            {
+                                //0~7表示小数位数 0：无小数
+                                soliTemperature = soliTemperature / (Math.Pow(10, pointbit));
+                            }
+                        }
+                        istItem.SubItems.Add(soliTemperature.ToString() + " °C");
+                    }
+                    //土壤水份
+                    //数据格式 03:00000011
+                    if (receiveString.Substring(58, 2) == "05")
+                    {
+                        //第五组数据:位格式解析
+                        double soliWater = 0;
+                        int pointbit = BitFormat(receiveString.Substring(60, 2));//返回小数位数
+                        if ((!flagBit7) && (!flagBit6) && (!flagBit5) && (!flagBit4))
+                        {
+                            //flagBit7为false表示是无符号数：土壤水份为非负数
+                            //flagBit6为false表示数值量
+                            //flagBit5为false表示用双字节来表示土壤水份
+                            //flagBit4为false表示土壤水份取数方式，是取低2字节
+                            soliWater = Convert.ToInt32(receiveString.Substring(62, 4), 16);//取低2位
+                            if (pointbit == 0)
+                            { ;}
+                            else
+                            {
+                                //0~7表示小数位数 0：无小数
+                                soliWater = soliWater / (Math.Pow(10, pointbit));
+                            }
+                            istItem.SubItems.Add(soliWater + " V");
+                        }
+                    }
+                    //设备电量
+                    //数据格式 02:00000010
+                    if (receiveString.Substring(66, 2) == "F2")
+                    {
+                        //第六组数据:位格式解析
+                        double voltage = 0;
+                        int pointbit = BitFormat(receiveString.Substring(68, 2));//返回小数位数
+                        if ((!flagBit7) && (!flagBit6) && (!flagBit5) && (!flagBit4))
+                        {
+                            //flagBit7为false表示是无符号数：电量为非负数
+                            //flagBit6为false表示数值量
+                            //flagBit5为false表示用双字节来表示电量
+                            //flagBit4为false表示电量取数方式，是取低2字节
+                            voltage = Convert.ToInt32(receiveString.Substring(70, 4), 16);//取低2位
+                            if (pointbit == 0)
+                            { ;}
+                            else
+                            {
+                                //0~7表示小数位数 0：无小数
+                                voltage = voltage / (Math.Pow(10, pointbit));
+                            }
+                        }
+                        istItem.SubItems.Add(voltage.ToString() + " V");
+                    }
+                    //委托到显示数据方法(脱离UI线程,防止界面因非UI线程访问而被卡死)
+                    if (this.lstvData.InvokeRequired)
+                    {
+                        this.lstvData.Invoke(new MethodInvoker(delegate() { UpdateReceiveDataFun(istItem); }));
+                    }
+                    else
+                    {
+                        //更新数据并显示到ListView表格中
+                        UpdateReceiveDataFun(istItem);
+                    }
+                }
+            }
+            catch (Exception ea)
+            {
+                string msg = ea.Message;
+                MessageBox.Show("解析出错：" + msg + " ；收到数据：" + oldstr, "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        //解析数据格式位（8个bit,见数据格式位地址说明表）,返回小数点位数
+        private int BitFormat(string bitStrHex)
+        {
+            ClearFlag();
+            //将十六进制bitStrHex转换成二进制数
+            int decStr = Convert.ToInt32(bitStrHex.ToString(), 16);//先转成十进制
+            string binStr = Convert.ToString(decStr, 2); //再将十进制转成二进制
+            //PadLeft(int totalWidth, char paddingChar) //在字符串左边用 paddingChar 补足 totalWidth 长度
+            binStr = binStr.PadLeft(8, '0'); //不够8位，从左边补0，最终对齐8位
+            char[] bitCharArray = binStr.ToCharArray();//8位二进制字符串转成字符数组
+            //最后三位二进制位表示小数位数
+            string last3bit = string.Empty;
+            //数据格式 81:10000001
+            for (int i = 0; i < bitCharArray.Length; i++)
+            {
+                if (i == 0 && bitCharArray[i] == '1')
+                {
+                    flagBit7 = true;
+                }
+                if (i == 1 && bitCharArray[i] == '1')
+                {
+                    flagBit6 = true;
+                }
+                if (i == 2 && bitCharArray[i] == '1')
+                {
+                    flagBit5 = true;
+                }
+                if (i == 3 && bitCharArray[i] == '1')
+                {
+                    flagBit4 = true;
+                }
+                if (i == 4 && bitCharArray[i] == '1')
+                {
+                    //就是协议里的Bit4(第5位，存是具体的数据的值)
+                }
+                //最后三位表示小数位
+                if (i == 5)
+                {
+                    last3bit += bitCharArray[i].ToString();
+                }
+                if (i == 6)
+                {
+                    last3bit += bitCharArray[i].ToString();
+                }
+                if (i == 7)
+                {
+                    last3bit += bitCharArray[i].ToString();
+                }
+            }
+            //将最后三位二进制位 转成 十进制数(小数点位数)返回
+            return Convert.ToInt32(last3bit, 2);
+        }
+        //重置数据格式位全局标志
+        private void ClearFlag()
+        {
+            flagBit7 = false;//是否是无符号数：True有符号数 false无符号数
+            flagBit6 = false;//是否是数值:True开关量 false数值
+            flagBit5 = false;//长整形数值标识:True四字节 false双字节
+            flagBit4 = false;//四字节数字节标识:True高两字节 false低两字节
+        }

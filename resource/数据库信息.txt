@@ -1,0 +1,8 @@
+库名：SensorDB
+表名: SensorDT
+
+登录用户: root
+登录密码：123456   (配置数据库时，自已指定)
+端口:3306
+数据库类型:
+mysql  Ver 14.14 Distrib 5.1.73, for debian-linux-gnu (i486) using readline 6.1

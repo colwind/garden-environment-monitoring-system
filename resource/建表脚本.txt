@@ -1,0 +1,19 @@
+
+CREATE TABLE `SensorDT` (
+  `sensor_id` int(11) NOT NULL AUTO_INCREMENT,
+  `node` varchar(50) DEFAULT '',
+  `device` varchar(50) DEFAULT '',
+  `transtype` varchar(50) DEFAULT '',
+  `startaddr` varchar(50) DEFAULT '',
+  `bytecount` varchar(50) DEFAULT '',
+  `temperature` varchar(50) DEFAULT '',
+  `humidity` varchar(50) DEFAULT '',
+  `illuminance` varchar(50) DEFAULT '',
+  `solitemperature` varchar(50) DEFAULT '',
+  `soliwater` varchar(50) DEFAULT '',
+  `voltage` varchar(50) DEFAULT '',
+  `checkbit1` varchar(50) DEFAULT '',
+  `checkbit2` varchar(50) DEFAULT '',
+  `receiveDate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`sensor_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=82 DEFAULT CHARSET=latin1 COMMENT='latin1_swedish_ci'
